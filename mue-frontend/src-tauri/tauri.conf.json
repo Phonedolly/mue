@@ -7,8 +7,8 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "mue-frontend",
-    "version": "0.0.0"
+    "productName": "Mue",
+    "version": "0.0.1"
   },
   "tauri": {
     "allowlist": {
@@ -16,6 +16,16 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": false,
+        "minimize": true,
+        "unminimize": true,
+        "startDragging": true
       }
     },
     "bundle": {
@@ -27,7 +37,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.mue.frontend",
       "targets": "all"
     },
     "security": {
@@ -38,9 +48,11 @@
     },
     "windows": [
       {
+        "decorations": false,
         "fullscreen": false,
-        "resizable": true,
-        "title": "mue-frontend",
+        "resizable": false,
+        "title": "Mue",
+        "transparent": true,
         "width": 800,
         "height": 600
       }
