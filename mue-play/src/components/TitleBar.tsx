@@ -8,11 +8,28 @@ const TitleBarWithoutLogic = styled.div`
   background: #329ea300;
   user-select: none;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+`;
+
+const Title = styled.div`
+  display: flex;
+  font-family: "Outfit";
+  font-weight: 400;
+  font-size: 14px;
+  color: #222222;
+  align-items: center;
+  margin-left: 1px;
+  padding-left: 10px;
+`;
+
+const TitleBarButtonArea = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const TitleBarButtonWithoutImage = styled.div<TitleBarButtonProps>`
@@ -24,7 +41,7 @@ const TitleBarButtonWithoutImage = styled.div<TitleBarButtonProps>`
   &:hover {
     background-color: ${(props: TitleBarButtonProps) =>
       props.isCloseButton ? "red" : "#DDDDDDF0"};
-    transition:  background-color 0.2s;
+    transition: background-color 0.2s;
   }
   transition: background-color 0.2s;
 `;
@@ -48,19 +65,19 @@ const TitleBarMaximizeButton: FC = () => (
 );
 
 const TitleBarCloseButton: FC = () => (
-  <TitleBarButtonWithoutImage
-    onClick={() => appWindow.close()}
-    isCloseButton
-  >
+  <TitleBarButtonWithoutImage onClick={() => appWindow.close()} isCloseButton>
     <img src="https://api.iconify.design/mdi:window-close.svg" alt="close" />
   </TitleBarButtonWithoutImage>
 );
 
 const TitleBar: FC = () => (
   <TitleBarWithoutLogic data-tauri-drag-region>
-    <TitleBarMinimizeButton />
-    {/* <TitleBarMaximizeButton /> */}
-    <TitleBarCloseButton />
+    <Title data-tauri-drag-region>Mue Play</Title>
+    <TitleBarButtonArea>
+      <TitleBarMinimizeButton />
+      {/* <TitleBarMaximizeButton /> */}
+      <TitleBarCloseButton />
+    </TitleBarButtonArea>
   </TitleBarWithoutLogic>
 );
 

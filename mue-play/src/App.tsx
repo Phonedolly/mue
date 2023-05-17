@@ -5,8 +5,9 @@ import { invoke } from "@tauri-apps/api/tauri";
 import TitleBar from "./components/TitleBar";
 import Container from "./components/Container";
 import { AnimatePresence } from "framer-motion";
-import { BulbOff, BulbOn } from "./components/Bulb";
-import GlobalLightState from "./components/GlobalLightState";
+import NavBar from "./components/NavBar";
+import InnerContainer from "./components/InnerContainer";
+import Bulb from "./components/Bulb";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -21,19 +22,12 @@ function App() {
   return (
     <Container>
       <TitleBar />
-      <AnimatePresence>
-        {globallyOn === true ? (
-          <>
-            <BulbOn />
-            <GlobalLightState>All Light is On</GlobalLightState>
-          </>
-        ) : (
-          <>
-            <BulbOff />
-            <GlobalLightState>All Light is Off</GlobalLightState>
-          </>
-        )}
-      </AnimatePresence>
+      <InnerContainer>
+        <NavBar />
+        <AnimatePresence>
+          <Bulb globallyOn={globallyOn} />
+        </AnimatePresence>
+      </InnerContainer>
     </Container>
   );
 }

@@ -11,3 +11,7 @@ export interface ButtonProps {
 export interface TitleBarButtonProps {
   isCloseButton?: boolean;
 }
+
+export interface NavBarProps {
+  numOfItems: number;
+}

@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "Mue",
+    "productName": "Mue Play",
     "version": "0.0.1"
   },
   "tauri": {
@@ -37,7 +37,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.mue.frontend",
+      "identifier": "com.mue.play",
       "targets": "all"
     },
     "security": {
@@ -51,7 +51,7 @@
         "decorations": false,
         "fullscreen": false,
         "resizable": false,
-        "title": "Mue",
+        "title": "Mue Play",
         "transparent": true,
         "width": 800,
         "height": 600
