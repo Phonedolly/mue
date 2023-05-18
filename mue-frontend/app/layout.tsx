@@ -1,14 +1,31 @@
+"use client";
+
+import { Outfit } from "next/font/google";
 import StyledComponentsRegistry from "@/lib/registry";
+import Container from "@/components/Container";
+import { NavBar, NavBarTriggerButton } from "@/components/NavBar";
+import GlobalStyle from "./globalStyle";
+import { useState } from "react";
+
+const outfit = Outfit({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [navOpen, setNavOpen] = useState(false);
   return (
-    <html>
+    <html lang="en" className={outfit.className}>
+      <GlobalStyle />
       <body>
-        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+        <StyledComponentsRegistry>
+          <Container>
+            <NavBarTriggerButton onClick={(e) => setNavOpen(!navOpen)} />
+            <NavBar navOpen={navOpen} setNavOpen={setNavOpen} />
+            {children}
+          </Container>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );

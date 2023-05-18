@@ -1473,7 +1473,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mue-play"
+name = "mue-agent"
 version = "0.0.0"
 dependencies = [
  "serde",

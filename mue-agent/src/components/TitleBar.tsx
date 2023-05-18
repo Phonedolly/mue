@@ -72,7 +72,7 @@ const TitleBarCloseButton: FC = () => (
 
 const TitleBar: FC = () => (
   <TitleBarWithoutLogic data-tauri-drag-region>
-    <Title data-tauri-drag-region>Mue Play</Title>
+    <Title data-tauri-drag-region>Mue Agent</Title>
     <TitleBarButtonArea>
       <TitleBarMinimizeButton />
       {/* <TitleBarMaximizeButton /> */}
