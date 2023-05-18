@@ -8,17 +8,27 @@ import { v4 } from "uuid";
 import Logo from "./Logo";
 import Link from "next/link";
 
-const NavBarWitoutLogic = styled.nav`
+const NavBarOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  background-color: rgba(10, 10, 10, 0.5);
+`;
+
+const NavBarWitoutLogic = styled.div`
   /* box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); */
   padding: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  position: fixed;
+  position: absolute;
   width: 5rem;
-  top: 32px;
-  left: 10px;
+  top: 1rem;
+  left: 1.2rem;
   z-index: 10;
 `;
 
@@ -27,8 +37,8 @@ const NavBarTriggerButtonWithoutLogic = styled.div`
   border: none;
   outline: none;
   cursor: pointer;
-  height: 1.8rem;
-  width: 1.8rem;
+  height: 2.2rem;
+  width: 2.2rem;
   /* box-shadow: 0px 0px 5px #ccc; */
   border-radius: 10px;
   background-repeat: no-repeat;
@@ -43,7 +53,6 @@ const NavBarTriggerButtonContainer = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  width:100%;
 `;
 
 const NavBarItemContainer = styled(motion.ul)`
@@ -61,7 +70,7 @@ const NavBarItemContainer = styled(motion.ul)`
   padding: 2rem 1rem;
   background-color: #222222;
 `;
-const NavBarItemWithoutLogic = styled.li`
+const NavBarItem = styled.li`
   display: flex;
   font-size: 1.4rem;
   font-weight: 700;
@@ -76,6 +85,7 @@ const NavBarItemWithoutLogic = styled.li`
 const navBarItems: { name: string; link: string }[] = [
   { name: "Home", link: "/" },
   { name: "Devices", link: "/devices" },
+  { name: "Settings", link: "/settings" },
   { name: "About", link: "/about" },
 ];
 
@@ -110,41 +120,48 @@ const NavBar = (props: NavBarProps) => {
     };
   }, [navOpen, setNavOpen]);
   return (
-    <NavBarWitoutLogic>
-      <AnimatePresence>
-        {navOpen === true ? (
-          <NavBarItemContainer
-            ref={refNav}
-            initial={{
-              opacity: 0,
-              x: -100,
-            }}
-            animate={{
-              opacity: 1,
-              x: -20,
-            }}
-            exit={{
-              x: -100,
-              opacity: 0,
-            }}
-          >
-            <Logo size="large" />
-            {navBarItems.map((item) => (
-              <NavBarItemWithoutLogic
-                // whileHover={{ scale: 1.05 }}
-                // whileTap={{ scale: 0.95 }}
-                as={Link}
-                href={item.link}
-                key={v4()}
-              >
-                {item.name}
-              </NavBarItemWithoutLogic>
-            ))}
-          </NavBarItemContainer>
-        ) : null}
-      </AnimatePresence>
-    </NavBarWitoutLogic>
+    <AnimatePresence>
+      {navOpen === true ? (
+        <NavBarOverlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { stiffness: 0 } }}
+          exit={{ opacity: 0 }}
+        >
+          <NavBarWitoutLogic>
+            <NavBarItemContainer
+              ref={refNav}
+              initial={{
+                opacity: 0,
+                x: -100,
+              }}
+              animate={{
+                opacity: 1,
+                x: "-2em",
+              }}
+              exit={{
+                x: -100,
+                opacity: 0,
+              }}
+            >
+              <Logo size="large" />
+              {navBarItems.map((item) => (
+                <NavBarItem
+                  // whileHover={{ scale: 1.05 }}
+                  // whileTap={{ scale: 0.95 }}
+                  as={Link}
+                  href={item.link}
+                  key={v4()}
+                  onClick={() => setNavOpen(false)}
+                >
+                  {item.name}
+                </NavBarItem>
+              ))}
+            </NavBarItemContainer>
+          </NavBarWitoutLogic>
+        </NavBarOverlay>
+      ) : null}
+    </AnimatePresence>
   );
 };
 
-export {NavBar, NavBarTriggerButton};
+export { NavBar, NavBarTriggerButton };

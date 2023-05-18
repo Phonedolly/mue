@@ -6,8 +6,28 @@ import Container from "@/components/Container";
 import { NavBar, NavBarTriggerButton } from "@/components/NavBar";
 import GlobalStyle from "./globalStyle";
 import { useState } from "react";
+import { styled } from "styled-components";
 
+import { Pacifico } from "next/font/google";
+
+const pacifico = Pacifico({ subsets: ["latin"], weight: "400" });
 const outfit = Outfit({ subsets: ["latin"] });
+
+const Header = styled.header`
+  display: flex;
+  width:100%;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  column-gap: 1.5rem;
+`;
+
+const HeaderText = styled.h1`
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  filter: drop-shadow(3px 4px 16px rgb(255, 255, 133,  1));
+`;
 
 export default function RootLayout({
   children,
@@ -21,7 +41,11 @@ export default function RootLayout({
       <body>
         <StyledComponentsRegistry>
           <Container>
-            <NavBarTriggerButton onClick={(e) => setNavOpen(!navOpen)} />
+            <Header>
+              <NavBarTriggerButton onClick={(e) => setNavOpen(!navOpen)} />
+              <HeaderText className={pacifico.className}>Mue</HeaderText>
+            </Header>
+
             <NavBar navOpen={navOpen} setNavOpen={setNavOpen} />
             {children}
           </Container>

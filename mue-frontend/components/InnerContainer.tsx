@@ -1,6 +1,7 @@
+import { motion } from "framer-motion";
 import styled from "styled-components";
 
-const InnerContainer = styled.div`
+const InnerContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   align-items: center;
