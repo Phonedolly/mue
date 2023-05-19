@@ -1,0 +1,8 @@
+# VSCode Setting Files
+.vscode
+
+# Dependencies
+FastLED-*
+MueStrip.h
+ESP8266WiFi
+aREST-*
