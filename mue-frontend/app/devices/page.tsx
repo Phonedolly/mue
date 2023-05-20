@@ -1,11 +1,13 @@
 "use client";
 
+import DeviceConfig from "@/components/DeviceConfig";
 import InnerContainer from "@/components/InnerContainer";
 import BulbIcon from "@/components/icons/BulbIcon";
 import MonitorIcon from "@/components/icons/Monitor";
 import StripIcon from "@/components/icons/StripIcon";
 import { IDevice } from "@/types/types";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
 
@@ -114,7 +116,9 @@ const Device = (props: { device: IDevice }) => {
       whileHover={{ scale: 1.03 }}
     >
       <DeviceTypeContainer>
-        <DeviceType>{props.device.type[0].toUpperCase() + props.device.type.slice(1)}</DeviceType>
+        <DeviceType>
+          {props.device.type[0].toUpperCase() + props.device.type.slice(1)}
+        </DeviceType>
       </DeviceTypeContainer>
       {icon}
       <InformationContainer>
@@ -125,80 +129,14 @@ const Device = (props: { device: IDevice }) => {
   );
 };
 
-export default function Devices() {
-  const devices: IDevice[] = [
-    {
-      id: v4(),
-      alias: "Strip1",
-      type: "strip",
-      status: {
-        brightness: 50,
-        isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
-        ip: "192.168.0.110",
-        isConnected: true,
-        isConnecting: false,
-      },
-    },
-    {
-      id: v4(),
-      alias: "Bulb1",
-      type: "bulb",
-      status: {
-        brightness: 50,
-        isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
-        ip: "192.168.0.112",
-        isConnected: true,
-        isConnecting: false,
-      },
-    },
-    {
-      id: v4(),
-      alias: "Mue Play",
-      type: "play",
-      status: {
-        brightness: 50,
-        isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
-        ip: "192.168.0.113",
-        isConnected: true,
-        isConnecting: false,
-      },
-    },
-    {
-      id: v4(),
-      alias: "test",
-      type: "strip",
-      status: {
-        brightness: 50,
-        isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
-        ip: "192.168.0.114",
-        isConnected: false,
-        isConnecting: false,
-      },
-    },
-    {
-      id: v4(),
-      alias: "test",
-      type: "strip",
-      status: {
-        brightness: 50,
-        isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
-        ip: "192.168.0.114",
-        isConnected: false,
-        isConnecting: true,
-      },
-    },
-  ];
+export default function Devices(props: { devices: IDevice[] }) {
+ 
 
   return (
     <InnerContainer>
       <DevicesContainer>
         <AnimatePresence>
-          {devices.map((device) => (
+          {props.devices.map((device) => (
             <Device key={v4()} device={device} />
           ))}
         </AnimatePresence>
