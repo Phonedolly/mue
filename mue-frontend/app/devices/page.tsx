@@ -8,6 +8,7 @@ import StripIcon from "@/components/icons/StripIcon";
 import { IDevice } from "@/types/types";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
 
@@ -27,20 +28,15 @@ const DeviceWithoutLogic = styled(motion.div)`
   width: 24rem;
   max-width: 80vw;
   cursor: pointer;
-  border-radius: 13px;
+  border-radius: 25px;
   padding: 2rem 1rem;
-`;
-
-const DeviceTypeContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  width: 100%;
-  align-items: center;
 `;
 
 const DeviceType = styled.h1`
   display: flex;
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -49,7 +45,43 @@ const DeviceType = styled.h1`
   color: rgb(180, 180, 180);
   border-radius: 13px;
   padding: 0.55rem;
-  margin: 0 1rem;
+  margin: 0;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.01);
+`;
+
+const OnOffSwitchIndicator = styled(motion.div)<{ on: boolean }>`
+  position: absolute;
+  top: 0px;
+  left: ${(props) => (props.on ? "50%" : "0%")};
+  width: 50%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: ${(props) =>
+    props.on ? "rgb(72, 232, 67)" : "rgb(50, 50, 50)"};
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.25);
+  transition: left 0.2s ease-in-out, background-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+`;
+const OnOffSwitchWithoutLogic = styled(motion.div)`
+  display: flex;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 2rem;
+  height: 1rem;
+  background-color: rgb(68, 68, 68);
+  border: none;
+  border-radius: 9999px;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
+  padding: 0.55rem 1rem;
+`;
+
+const TypeAndSwitch = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 `;
 
 const DeviceName = styled.h1`
@@ -70,7 +102,16 @@ const InformationContainer = styled.div`
   row-gap: 0.2rem;
 `;
 
+const OnOffSwitch = (props: { on: boolean; setOn: (cur: boolean) => void }) => {
+  return (
+    <OnOffSwitchWithoutLogic onClick={() => props.setOn(!props.on)}>
+      <OnOffSwitchIndicator on={props.on} />
+    </OnOffSwitchWithoutLogic>
+  );
+};
+
 const Device = (props: { device: IDevice }) => {
+  const [on, setOn] = useState(props.device.status.isOn);
   let icon;
   let connectStatus: string = "Device is Offline";
   let connectStatusColor: string = "#bc0303";
@@ -115,11 +156,12 @@ const Device = (props: { device: IDevice }) => {
       animate={{ y: "0em", opacity: 1 }}
       whileHover={{ scale: 1.03 }}
     >
-      <DeviceTypeContainer>
+      <TypeAndSwitch>
         <DeviceType>
           {props.device.type[0].toUpperCase() + props.device.type.slice(1)}
         </DeviceType>
-      </DeviceTypeContainer>
+        <OnOffSwitch on={on} setOn={setOn} />
+      </TypeAndSwitch>
       {icon}
       <InformationContainer>
         <DeviceName>{props.device.alias}</DeviceName>
@@ -129,14 +171,79 @@ const Device = (props: { device: IDevice }) => {
   );
 };
 
-export default function Devices(props: { devices: IDevice[] }) {
- 
-
+export default function Devices() {
+  const devices: IDevice[] = [
+    {
+      id: v4(),
+      alias: "Strip1",
+      type: "strip",
+      status: {
+        brightness: 50,
+        isOn: true,
+        color: { red: 255, green: 255, blue: 255 },
+        ip: "192.168.0.110",
+        isConnected: true,
+        isConnecting: false,
+      },
+    },
+    {
+      id: v4(),
+      alias: "Bulb1",
+      type: "bulb",
+      status: {
+        brightness: 50,
+        isOn: true,
+        color: { red: 255, green: 255, blue: 255 },
+        ip: "192.168.0.112",
+        isConnected: true,
+        isConnecting: false,
+      },
+    },
+    {
+      id: v4(),
+      alias: "Mue Play",
+      type: "play",
+      status: {
+        brightness: 50,
+        isOn: true,
+        color: { red: 255, green: 255, blue: 255 },
+        ip: "192.168.0.113",
+        isConnected: true,
+        isConnecting: false,
+      },
+    },
+    {
+      id: v4(),
+      alias: "test",
+      type: "strip",
+      status: {
+        brightness: 50,
+        isOn: true,
+        color: { red: 255, green: 255, blue: 255 },
+        ip: "192.168.0.114",
+        isConnected: false,
+        isConnecting: false,
+      },
+    },
+    {
+      id: v4(),
+      alias: "test",
+      type: "strip",
+      status: {
+        brightness: 50,
+        isOn: true,
+        color: { red: 255, green: 255, blue: 255 },
+        ip: "192.168.0.114",
+        isConnected: false,
+        isConnecting: true,
+      },
+    },
+  ];
   return (
     <InnerContainer>
       <DevicesContainer>
         <AnimatePresence>
-          {props.devices.map((device) => (
+          {devices.map((device) => (
             <Device key={v4()} device={device} />
           ))}
         </AnimatePresence>

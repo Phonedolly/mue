@@ -27,6 +27,7 @@ const HeaderText = styled.h1`
   font-weight: 700;
   color: white;
   filter: drop-shadow(3px 4px 16px rgb(255, 255, 133,  1));
+  margin: 0.2rem;
 `;
 
 export default function RootLayout({
