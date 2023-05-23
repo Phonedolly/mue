@@ -10,7 +10,7 @@ import StripIcon from "@/components/icons/StripIcon";
 import { IDevice } from "@/types/types";
 import { AnimatePresence, motion, useAnimate } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { SyntheticEvent, useEffect, useState } from "react";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
 
@@ -249,6 +249,20 @@ const Device = (props: {
   const [on, setOn] = useState<boolean>(device.status.isOn);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [scope, animate] = useAnimate();
+
+  useEffect(() => {
+    function listenEscapeKeyPress(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowModal(false);
+      }
+    }
+    if (showModal === true) {
+      document.addEventListener("keydown", listenEscapeKeyPress);
+    } else {
+      document.removeEventListener("keydown", listenEscapeKeyPress);
+    }
+  }, [showModal]);
+  
   let icon;
   let connectStatus: string = "Device is Offline";
   let connectStatusColor: string = "#bc0303";
@@ -398,7 +412,7 @@ export default function Devices() {
       status: {
         brightness: 50,
         isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
+        color: { red: 195, green: 255, blue: 255 },
         ip: "192.168.0.114",
         isConnected: false,
         isConnecting: true,
