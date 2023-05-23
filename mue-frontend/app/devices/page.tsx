@@ -262,7 +262,7 @@ const Device = (props: {
       document.removeEventListener("keydown", listenEscapeKeyPress);
     }
   }, [showModal]);
-  
+
   let icon;
   let connectStatus: string = "Device is Offline";
   let connectStatusColor: string = "#bc0303";
@@ -321,7 +321,7 @@ const Device = (props: {
         }}
         $backgroundColor={`rgba(${device.status.color.red}, ${
           device.status.color.green
-        }, ${device.status.color.blue}, ${device.status.isOn ? 0.37 : 0.2})`}
+        }, ${device.status.color.blue}, ${device.status.isOn ? 0.45 : 0.2})`}
         // onClick={() => {
         //   props.setWhichDeviceSelected(props.device.id);
         //   props.setShowModal(true);
