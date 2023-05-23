@@ -10,7 +10,7 @@ import StripIcon from "@/components/icons/StripIcon";
 import { IDevice } from "@/types/types";
 import { AnimatePresence, motion, useAnimate } from "framer-motion";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
 
@@ -34,11 +34,11 @@ const DeviceModalWithoutLogic = styled(motion.div)`
   justify-content: center;
   padding: 1.5rem;
   max-height: 80vh;
-  width: 40rem;
+  width: 32rem;
   max-width: 80vw;
   border-radius: 25px;
   background-color: rgb(60, 60, 60);
-  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.5);
 `;
 
 const DeviceModalTitleAndEdit = styled.div`
@@ -58,7 +58,7 @@ const DeviceModalInfoTable = styled.table`
   color: rgb(200, 200, 200);
   text-align: center;
   font-size: 1.35rem;
-  padding: 2rem;
+  padding: 2rem 0.2rem;
 `;
 
 const DeviceModalInfoTableTitle = styled.td`
@@ -118,26 +118,31 @@ const DeviceModal = (props: {
 };
 
 const DevicesContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  row-gap: 4rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+  row-gap: 3vw;
 `;
 
-const DeviceWithoutLogic = styled(motion.div)`
+const DeviceWithoutLogic = styled(motion.div)<{ $backgroundColor?: string }>`
   display: flex;
   flex-direction: column;
-  row-gap: 4vw;
+  row-gap: 1.5rem;
   align-items: center;
   justify-content: center;
-  background-color: rgb(50, 50, 50);
+  background-color: ${(props) =>
+    props?.$backgroundColor ? props.$backgroundColor : "rgb(50, 50, 50)"};
   width: 24rem;
-  max-width: 80vw;
+  max-width: 80%;
   cursor: pointer;
   border-radius: 25px;
   padding: 2rem 1rem;
+  transition: background-color 0.175s ease-in-out;
 `;
 
-const DeviceType = styled.h1`
+const DeviceType = styled.h1<{ isOn: boolean }>`
   display: flex;
   position: absolute;
   top: 1.5rem;
@@ -146,12 +151,14 @@ const DeviceType = styled.h1`
   justify-content: center;
   align-items: center;
   font-size: 1.1rem;
-  background-color: rgb(68, 68, 68);
+  background-color: ${(props) =>
+    props.isOn ? "rgba(68, 68, 68, 0.7)" : "rgba(34,34,34, 0.4)"};
   color: rgb(180, 180, 180);
   border-radius: 13px;
   padding: 0.55rem;
   margin: 0;
   box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.01);
+  transition: background-color 0.175s ease-in-out, color 0.175s ease-in-out;
 `;
 
 const OnOffSwitchIndicator = styled(motion.div)<{ $on: boolean }>`
@@ -297,16 +304,23 @@ const Device = (props: {
         onClick={() => {
           setShowModal(true);
         }}
+        $backgroundColor={`rgba(${device.status.color.red}, ${
+          device.status.color.green
+        }, ${device.status.color.blue}, ${device.status.isOn ? 0.37 : 0.2})`}
         // onClick={() => {
         //   props.setWhichDeviceSelected(props.device.id);
         //   props.setShowModal(true);
         // }}
       >
         <TypeAndSwitch>
-          <DeviceType>
+          <DeviceType isOn={device.status.isOn}>
             {device.type[0].toUpperCase() + device.type.slice(1)}
           </DeviceType>
-          <OnOffSwitch isOn={device.status.isOn} curID={device.id} setDevice={setDevice} />
+          <OnOffSwitch
+            isOn={device.status.isOn}
+            curID={device.id}
+            setDevice={setDevice}
+          />
         </TypeAndSwitch>
         {icon}
         <InformationContainer>
@@ -344,7 +358,7 @@ export default function Devices() {
       status: {
         brightness: 50,
         isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
+        color: { red: 255, green: 255, blue: 0 },
         ip: "192.168.0.112",
         isConnected: true,
         isConnecting: false,
@@ -357,7 +371,7 @@ export default function Devices() {
       status: {
         brightness: 50,
         isOn: true,
-        color: { red: 255, green: 255, blue: 255 },
+        color: { red: 255, green: 100, blue: 255 },
         ip: "192.168.0.113",
         isConnected: true,
         isConnecting: false,

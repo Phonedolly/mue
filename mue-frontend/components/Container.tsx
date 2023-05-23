@@ -8,7 +8,7 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  width: 40rem;
+  width: 65rem;
   max-width: 90vw;
   margin: 0 auto;
 `;
