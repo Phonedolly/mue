@@ -3,13 +3,13 @@ import Icon from "./Icon";
 const SettingsIcon = (props: {
   size?: "small" | "medium" | "large" | "xlarge" | string;
   on?: boolean;
-  maxSize?:string;
+  masxize?:string;
 }) => {
   return (
     <Icon
       size={props.size}
       on={props.on}
-      maxSize={props.maxSize}
+      masxize={props.masxize}
       /**
        * https://www.svgrepo.com/svg/497505/setting-2
        */

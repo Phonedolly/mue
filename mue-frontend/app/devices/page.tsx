@@ -1,16 +1,121 @@
 "use client";
 
+import Button from "@/components/Button";
 import DeviceConfig from "@/components/DeviceConfig";
 import InnerContainer from "@/components/InnerContainer";
 import BulbIcon from "@/components/icons/BulbIcon";
+import EditIcon from "@/components/icons/EditIcon";
 import MonitorIcon from "@/components/icons/Monitor";
 import StripIcon from "@/components/icons/StripIcon";
 import { IDevice } from "@/types/types";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useAnimate } from "framer-motion";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
+
+const DeviceModalBackground = styled(motion.div)`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+`;
+const DeviceModalWithoutLogic = styled(motion.div)`
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  max-height: 80vh;
+  width: 40rem;
+  max-width: 80vw;
+  border-radius: 25px;
+  background-color: rgb(60, 60, 60);
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.4);
+`;
+
+const DeviceModalTitleAndEdit = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+`;
+const DeviceModalTitle = styled.h1`
+  font-size: 2.3rem;
+  color: white;
+`;
+
+const DeviceModalInfoTable = styled.table`
+  border: none;
+  width: 100%;
+  color: rgb(200, 200, 200);
+  text-align: center;
+  font-size: 1.35rem;
+  padding: 2rem;
+`;
+
+const DeviceModalInfoTableTitle = styled.td`
+  color: white;
+  font-weight: bold;
+`;
+
+const DeviceModal = (props: {
+  device: IDevice;
+  setShowModal: (newVal: boolean) => void;
+  icon: JSX.Element;
+}) => {
+  return (
+    <DeviceModalWithoutLogic
+      initial={{ opacity: 0.5, y: 200 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 200 }}
+    >
+      <DeviceModalTitleAndEdit>
+        <DeviceModalTitle>{props.device.alias}</DeviceModalTitle>
+        <Button icon={<EditIcon />} backgroundColor="transparent" />
+      </DeviceModalTitleAndEdit>
+      {props.icon}
+      <DeviceModalInfoTable>
+        {[
+          ["Name", props.device.alias],
+          [
+            "Type",
+            props.device.type[0].toUpperCase() + props.device.type.slice(1),
+          ],
+          [
+            "Status",
+            props.device.status.isConnected
+              ? "Connected"
+              : props.device.status.isConnecting
+              ? "Connecting"
+              : "Disconnected",
+          ],
+          ["Brightness", `${props.device.status.brightness}%`],
+          [
+            "Color",
+            `rgb(${props.device.status.color.red}, ${props.device.status.color.green}, ${props.device.status.color.blue})`,
+          ],
+          ["IP", props.device.status.ip],
+        ].map((item) => (
+          <tr key={v4()} style={{ height: "2.7rem" }}>
+            <DeviceModalInfoTableTitle>{item[0]}</DeviceModalInfoTableTitle>
+            <td>{item[1]}</td>
+          </tr>
+        ))}
+      </DeviceModalInfoTable>
+      <Button size="medium" onClick={() => props.setShowModal(false)}>
+        Close
+      </Button>
+    </DeviceModalWithoutLogic>
+  );
+};
 
 const DevicesContainer = styled.div`
   display: flex;
@@ -49,18 +154,17 @@ const DeviceType = styled.h1`
   box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.01);
 `;
 
-const OnOffSwitchIndicator = styled(motion.div)<{ on: boolean }>`
+const OnOffSwitchIndicator = styled(motion.div)<{ $on: boolean }>`
   position: absolute;
   top: 0px;
-  left: ${(props) => (props.on ? "50%" : "0%")};
+  left: ${(props) => (props.$on ? "50%" : "0%")};
   width: 50%;
   height: 100%;
   border-radius: 9999px;
   background-color: ${(props) =>
-    props.on ? "rgb(72, 232, 67)" : "rgb(50, 50, 50)"};
+    props.$on ? "rgb(72, 232, 67)" : "rgb(50, 50, 50)"};
   box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.25);
-  transition: left 0.2s ease-in-out, background-color 0.2s ease-in-out,
-    box-shadow 0.2s ease-in-out;
+  transition: left 0.175s ease-in-out, background-color 0.175s ease-in-out;
 `;
 const OnOffSwitchWithoutLogic = styled(motion.div)`
   display: flex;
@@ -102,77 +206,124 @@ const InformationContainer = styled.div`
   row-gap: 0.2rem;
 `;
 
-const OnOffSwitch = (props: { on: boolean; setOn: (cur: boolean) => void }) => {
+const OnOffSwitch = (props: {
+  isOn: boolean;
+  setDevice: (func: (prev: IDevice) => IDevice) => void;
+  curID: string;
+}) => {
   return (
-    <OnOffSwitchWithoutLogic onClick={() => props.setOn(!props.on)}>
-      <OnOffSwitchIndicator on={props.on} />
+    <OnOffSwitchWithoutLogic
+      onClick={(e) => {
+        e.stopPropagation();
+        props.setDevice((prev) => {
+          return {
+            ...prev,
+            status: {
+              ...prev.status,
+              isOn: !prev.status.isOn,
+            },
+          };
+        });
+      }}
+    >
+      <OnOffSwitchIndicator $on={props.isOn} />
     </OnOffSwitchWithoutLogic>
   );
 };
 
-const Device = (props: { device: IDevice }) => {
-  const [on, setOn] = useState(props.device.status.isOn);
+const Device = (props: {
+  device: IDevice;
+  setDevices: (func: (prev: IDevice[]) => IDevice[]) => void;
+  // setWhichDeviceSelected: (newVal: string) => void;
+  // setShowModal: (newVal: boolean) => void;
+}) => {
+  const [device, setDevice] = useState<IDevice>(props.device);
+  const [on, setOn] = useState<boolean>(device.status.isOn);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [scope, animate] = useAnimate();
   let icon;
   let connectStatus: string = "Device is Offline";
   let connectStatusColor: string = "#bc0303";
   switch (props.device.type) {
     case "bulb":
-      icon = (
-        <BulbIcon size="12rem" on={props.device.status.isOn} maxSize="40vw" />
-      );
+      icon = <BulbIcon size="12rem" on={device.status.isOn} masxize="40vw" />;
       break;
     case "play":
       icon = (
-        <MonitorIcon
-          size="12rem"
-          on={props.device.status.isOn}
-          maxSize="40vw"
-        />
+        <MonitorIcon size="12rem" on={device.status.isOn} masxize="40vw" />
       );
       break;
     case "strip":
       icon = (
-        <StripIcon size="12rem" on={props.device.status.isOn} maxSize="40vw" />
+        <StripIcon size="12rem" on={props.device.status.isOn} masxize="40vw" />
       );
       break;
   }
-  if (props.device.status.isConnected) {
+  if (device.status.isConnected) {
     connectStatus = "Connected";
     connectStatusColor = "#a3e635";
-  } else if (props.device.status.isConnecting) {
+  } else if (device.status.isConnecting) {
     connectStatus = "Connecting";
     connectStatusColor = "#999999";
   } else if (
-    props.device.status.isConnected === false &&
-    props.device.status.isConnecting === false
+    device.status.isConnected === false &&
+    device.status.isConnecting === false
   ) {
     connectStatus = "Device is Offline";
     connectStatusColor = "#e90202";
   }
 
   return (
-    <DeviceWithoutLogic
-      initial={{ y: "15em", opacity: 0 }}
-      animate={{ y: "0em", opacity: 1 }}
-      whileHover={{ scale: 1.03 }}
-    >
-      <TypeAndSwitch>
-        <DeviceType>
-          {props.device.type[0].toUpperCase() + props.device.type.slice(1)}
-        </DeviceType>
-        <OnOffSwitch on={on} setOn={setOn} />
-      </TypeAndSwitch>
-      {icon}
-      <InformationContainer>
-        <DeviceName>{props.device.alias}</DeviceName>
-        <DeviceStatus color={connectStatusColor}>{connectStatus}</DeviceStatus>
-      </InformationContainer>
-    </DeviceWithoutLogic>
+    <>
+      <AnimatePresence>
+        {showModal === true ? (
+          <DeviceModalBackground
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { delay: 0.2 } }}
+          >
+            <DeviceModal
+              device={device}
+              setShowModal={setShowModal}
+              icon={icon}
+            />
+          </DeviceModalBackground>
+        ) : null}
+      </AnimatePresence>
+      <DeviceWithoutLogic
+        initial={{ y: "15em", opacity: 0 }}
+        animate={{ y: "0em", opacity: 1 }}
+        whileHover={{ scale: 1.03 }}
+        onClick={() => {
+          setShowModal(true);
+        }}
+        // onClick={() => {
+        //   props.setWhichDeviceSelected(props.device.id);
+        //   props.setShowModal(true);
+        // }}
+      >
+        <TypeAndSwitch>
+          <DeviceType>
+            {device.type[0].toUpperCase() + device.type.slice(1)}
+          </DeviceType>
+          <OnOffSwitch isOn={device.status.isOn} curID={device.id} setDevice={setDevice} />
+        </TypeAndSwitch>
+        {icon}
+        <InformationContainer>
+          <DeviceName>{device.alias}</DeviceName>
+          <DeviceStatus color={connectStatusColor}>
+            {connectStatus}
+          </DeviceStatus>
+        </InformationContainer>
+      </DeviceWithoutLogic>
+    </>
   );
 };
 
 export default function Devices() {
-  const devices: IDevice[] = [
+  // const [showModal, setShowModal] = useState<boolean>(false);
+  // const [whichDeviceSelected, setWhichDeviceSelected] = useState<string>("");
+  const [initDevicesStatus, setInitDevicesStatus] = useState<IDevice[]>([
     {
       id: v4(),
       alias: "Strip1",
@@ -238,13 +389,20 @@ export default function Devices() {
         isConnecting: true,
       },
     },
-  ];
+  ]);
+
   return (
     <InnerContainer>
       <DevicesContainer>
         <AnimatePresence>
-          {devices.map((device) => (
-            <Device key={v4()} device={device} />
+          {initDevicesStatus.map((device) => (
+            <Device
+              key={v4()}
+              device={device}
+              setDevices={setInitDevicesStatus}
+              // setWhichDeviceSelected={setWhichDeviceSelected}
+              // setShowModal={setShowModal}
+            />
           ))}
         </AnimatePresence>
       </DevicesContainer>

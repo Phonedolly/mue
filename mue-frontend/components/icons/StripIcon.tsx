@@ -2,14 +2,14 @@ import Icon from "./Icon";
 
 const StripIcon = (props: {
   size?: "small" | "medium" | "large" | "xlarge" | string;
-  maxSize?:string;
+  masxize?:string;
   on?: boolean;
 }) => {
   return (
     <Icon
       size={props.size}
       on={props.on}
-      maxSize={props.maxSize}
+      masxize={props.masxize}
       /**
        * https://www.svgrepo.com/svg/487523/line
        */

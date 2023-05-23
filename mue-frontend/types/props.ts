@@ -2,7 +2,7 @@ import { TargetAndTransition, VariantLabels } from "framer-motion";
 import { WebTarget } from "styled-components";
 
 export interface ButtonProps {
-  children: string;
+  children?: string;
   icon?: JSX.Element;
   size?: "small" | "medium" | "large" | "xlarge";
   fontWeight?: "normal" | "bold" | "italic";
@@ -12,6 +12,7 @@ export interface ButtonProps {
   disabled?: boolean;
   isLink?: boolean;
   href?: string;
+  backgroundColor?: string;
 }
 
 export interface TitleBarButtonProps {

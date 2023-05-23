@@ -7,6 +7,7 @@ import Link from "next/link";
 const ButtonWithoutLogic = styled(motion.div)<{
   size: { objectSize: string; padding: string };
   fontWeight: "normal" | "bold" | "italic";
+  $backgroundColor?: string;
 }>`
   display: flex;
   flex-direction: row;
@@ -14,19 +15,19 @@ const ButtonWithoutLogic = styled(motion.div)<{
   /* justify-content: space-around; */
   column-gap: 0.3em;
   font-family: inherit;
-  font-size: ${(props) => props.size.objectSize};
-  font-weight: ${(props) => props.fontWeight};
-  background-color: #303030;
+  font-size: ${(props) => props.size?.objectSize || "1.0em"};
+  font-weight: ${(props) => props?.fontWeight || "normal"};
+  background-color: ${(props) => props?.$backgroundColor || "#303030"};
   color: white;
   border: none;
   border-radius: 13px;
   cursor: pointer;
-  padding: ${(props) => props.size.padding};
+  padding: ${(props) => props.size?.padding || "0.7em 0.9em"};
 `;
 
 const Button: FC<ButtonProps> = (props) => {
   const buttonSizes = {
-    small: { objectSize: "0.7em", padding: "0.25em 0.3em" },
+    small: { objectSize: "1.0em", padding: "0.5em 0.6em" },
     medium: { objectSize: "1.2em", padding: "0.7em 0.9em" },
     large: { objectSize: "2em", padding: "1.5em" },
     xlarge: { objectSize: "3em", padding: "2em" },
@@ -66,9 +67,10 @@ const Button: FC<ButtonProps> = (props) => {
       {...props}
       size={buttonSize}
       fontWeight={fontWeight}
+      $backgroundColor={props?.backgroundColor}
     >
       {props.icon !== undefined ? props.icon : null}
-      {props.children}
+      {props?.children || null}
     </ButtonWithoutLogic>
   );
 };
