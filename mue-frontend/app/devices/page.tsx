@@ -124,7 +124,7 @@ const DevicesContainer = styled.div`
   @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
   }
-  row-gap: 3vw;
+  row-gap: 3rem;
 `;
 
 const DeviceWithoutLogic = styled(motion.div)<{ $backgroundColor?: string }>`
