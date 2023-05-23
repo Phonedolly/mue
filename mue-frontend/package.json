@@ -13,6 +13,8 @@
     "@types/node": "20.1.7",
     "@types/react": "18.2.6",
     "@types/react-dom": "18.2.4",
+    "@uiw/color-convert": "^1.2.2",
+    "@uiw/react-color-wheel": "^1.2.2",
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.2",
     "framer-motion": "^10.12.12",

@@ -1,7 +1,6 @@
 "use client";
 
 import Button from "@/components/Button";
-import DeviceConfig from "@/components/DeviceConfig";
 import InnerContainer from "@/components/InnerContainer";
 import BulbIcon from "@/components/icons/BulbIcon";
 import EditIcon from "@/components/icons/EditIcon";
@@ -9,10 +8,11 @@ import MonitorIcon from "@/components/icons/Monitor";
 import StripIcon from "@/components/icons/StripIcon";
 import { IDevice } from "@/types/types";
 import { AnimatePresence, motion, useAnimate } from "framer-motion";
-import Link from "next/link";
-import { SyntheticEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
+import Wheel from "@uiw/react-color-wheel";
+import { HsvaColor, rgbaToHsva } from "@uiw/color-convert";
 
 const DeviceModalBackground = styled(motion.div)`
   position: fixed;
@@ -26,6 +26,7 @@ const DeviceModalBackground = styled(motion.div)`
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 10;
 `;
+
 const DeviceModalWithoutLogic = styled(motion.div)`
   display: flex;
   flex-direction: column;
@@ -33,12 +34,16 @@ const DeviceModalWithoutLogic = styled(motion.div)`
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  max-height: 80vh;
+  max-height: 95vh;
   width: 32rem;
   max-width: 80vw;
   border-radius: 25px;
   background-color: rgb(60, 60, 60);
   box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.5);
+  overflow-y: scroll;
+  &::-webkit-scrollbar {
+    -webkit-appearance: none;
+  }
 `;
 
 const DeviceModalTitleAndEdit = styled.div`
@@ -51,6 +56,96 @@ const DeviceModalTitle = styled.h1`
   font-size: 2.3rem;
   color: white;
 `;
+
+const DeviceModalColorPickerAndBrightnessWithoutLogic = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 2.5rem;
+  width: 100%;
+`;
+
+function makePercentage(value: number, max: number) {
+  const percentage = `${String(Math.round((value / max) * 100))}%`;
+  return percentage;
+}
+const BrightnessSliderWithoutLogic = styled.input<{ value: number }>`
+  appearance: none;
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 2em;
+    height: 4em;
+    cursor: -webkit-grab;
+  }
+
+  background-color: transparent;
+  accent-color: #f5f5f5;
+  height: 4rem;
+  width: 80%;
+  max-width: 70vw;
+  border-radius: 30px;
+  cursor: pointer;
+  background-image: linear-gradient(
+    to right,
+    #fbf8c1 0%,
+    #fbf8c1 ${(props) => makePercentage(props.value, 100)},
+    #505050 ${(props) => makePercentage(props.value, 100)},
+    #505050 100%
+  );
+`;
+
+const BrightnessSliderContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width:100%;
+`;
+
+const BrightnessSlider = (props: {
+  value: number;
+  setBrightness: (newVal: number) => void;
+}) => {
+  return (
+    <BrightnessSliderContainer>
+      <BrightnessSliderWithoutLogic
+        type="range"
+        min="0"
+        max="100"
+        value={props.value}
+        onChange={(e) => props.setBrightness(Number(e.target.value))}
+        defaultValue={props.value}
+      />
+      <DeviceModalBrightness>{`${props.value}%`}</DeviceModalBrightness>
+    </BrightnessSliderContainer>
+  );
+};
+const DeviceModalBrightness = styled.h1`
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  width: 3em;
+  text-align: center;
+`;
+const DeviceModalColorPickerAndBrightness = (props: {
+  initialColor: HsvaColor;
+  initialBrightness: number;
+}) => {
+  const [hsva, setHsva] = useState(props.initialColor);
+  const [brightness, setBrightness] = useState(props.initialBrightness);
+  return (
+    <DeviceModalColorPickerAndBrightnessWithoutLogic>
+      <Wheel
+        color={hsva}
+        onChange={(color) => {
+          setHsva({ ...hsva, ...color.hsva });
+        }}
+      />
+      <BrightnessSlider value={brightness} setBrightness={setBrightness} />
+    </DeviceModalColorPickerAndBrightnessWithoutLogic>
+  );
+};
 
 const DeviceModalInfoTable = styled.table`
   border: none;
@@ -66,6 +161,21 @@ const DeviceModalInfoTableTitle = styled.td`
   font-weight: bold;
 `;
 
+const DeviceModalInfoTableValue = styled.div`
+  display: flex;
+  flex-direction: row;
+  column-gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+`;
+
+const DeviceModalCurrentColor = styled.span<{ color: string }>`
+  background-color: ${(props) => props.color};
+  border-radius: 8px;
+  width: 1.8rem;
+  height: 1.8rem;
+`;
+
 const DeviceModal = (props: {
   device: IDevice;
   setShowModal: (newVal: boolean) => void;
@@ -73,42 +183,60 @@ const DeviceModal = (props: {
 }) => {
   return (
     <DeviceModalWithoutLogic
-      initial={{ opacity: 0.5, y: 200 }}
+      initial={{ opacity: 0.5, y: "30vh" }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 200 }}
+      exit={{ opacity: 0, y: "30vh" }}
     >
       <DeviceModalTitleAndEdit>
         <DeviceModalTitle>{props.device.alias}</DeviceModalTitle>
-        <Button icon={<EditIcon />} backgroundColor="transparent" />
+        <Button icon={<EditIcon />} $backgroundColor="transparent" />
       </DeviceModalTitleAndEdit>
-      {props.icon}
+      {/* {props.icon} */}
+      <DeviceModalColorPickerAndBrightness
+        initialColor={rgbaToHsva({
+          r: props.device.status.color.red,
+          g: props.device.status.color.green,
+          b: props.device.status.color.blue,
+          a: 1,
+        })}
+        initialBrightness={props.device.status.brightness}
+      />
       <DeviceModalInfoTable>
-        {[
-          ["Name", props.device.alias],
-          [
-            "Type",
-            props.device.type[0].toUpperCase() + props.device.type.slice(1),
-          ],
-          [
-            "Status",
-            props.device.status.isConnected
-              ? "Connected"
-              : props.device.status.isConnecting
-              ? "Connecting"
-              : "Disconnected",
-          ],
-          ["Brightness", `${props.device.status.brightness}%`],
-          [
-            "Color",
-            `rgb(${props.device.status.color.red}, ${props.device.status.color.green}, ${props.device.status.color.blue})`,
-          ],
-          ["IP", props.device.status.ip],
-        ].map((item) => (
-          <tr key={v4()} style={{ height: "2.7rem" }}>
-            <DeviceModalInfoTableTitle>{item[0]}</DeviceModalInfoTableTitle>
-            <td>{item[1]}</td>
-          </tr>
-        ))}
+        <tbody>
+          {[
+            ["Name", props.device.alias],
+            [
+              "Type",
+              props.device.type[0].toUpperCase() + props.device.type.slice(1),
+            ],
+            [
+              "Status",
+              props.device.status.isConnected
+                ? "Connected"
+                : props.device.status.isConnecting
+                ? "Connecting"
+                : "Disconnected",
+            ],
+            ["Brightness", `${props.device.status.brightness}%`],
+            [
+              "Color",
+              `rgb(${props.device.status.color.red}, ${props.device.status.color.green}, ${props.device.status.color.blue})`,
+            ],
+            ["IP", props.device.status.ip],
+          ].map((item) => (
+            <tr key={v4()} style={{ height: "2.7rem" }}>
+              <DeviceModalInfoTableTitle>{item[0]}</DeviceModalInfoTableTitle>
+              <td>
+                <DeviceModalInfoTableValue>
+                  {item[0] === "Color" ? (
+                    <DeviceModalCurrentColor color={item[1]} />
+                  ) : null}
+                  {item[1]}
+                </DeviceModalInfoTableValue>
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </DeviceModalInfoTable>
       <Button size="medium" onClick={() => props.setShowModal(false)}>
         Close
@@ -140,10 +268,10 @@ const DeviceWithoutLogic = styled(motion.div)<{ $backgroundColor?: string }>`
   cursor: pointer;
   border-radius: 25px;
   padding: 2rem 1rem;
-  transition: background-color 0.175s ease-in-out;
+  transition: background-color 0.3s ease-in-out;
 `;
 
-const DeviceType = styled.h1<{ isOn: boolean }>`
+const DeviceType = styled.h1<{ $isOn: boolean }>`
   display: flex;
   position: absolute;
   top: 1.5rem;
@@ -153,8 +281,8 @@ const DeviceType = styled.h1<{ isOn: boolean }>`
   align-items: center;
   font-size: 1.1rem;
   background-color: ${(props) =>
-    props.isOn ? "rgba(68, 68, 68, 0.7)" : "rgba(34,34,34, 0.4)"};
-  color: rgb(180, 180, 180);
+    props.$isOn ? "rgba(68, 68, 68, 0.5)" : "rgba(34,34,34, 0.4)"};
+  color: rgb(220, 220, 220);
   border-radius: 13px;
   padding: 0.55rem;
   margin: 0;
@@ -203,9 +331,12 @@ const DeviceName = styled.h1`
 `;
 
 const DeviceStatus = styled.h2<{ color: string }>`
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: ${(props) => props.color};
   margin: 0.35rem auto;
+  background-color: rgba(68, 68, 68, 0.25);
+  padding: 0.2em 0.5em;
+  border-radius: 13px;
 `;
 
 const InformationContainer = styled.div`
@@ -265,7 +396,7 @@ const Device = (props: {
 
   let icon;
   let connectStatus: string = "Device is Offline";
-  let connectStatusColor: string = "#bc0303";
+  let connectStatusColor: string = "#c9c9c9";
   switch (props.device.type) {
     case "bulb":
       icon = <BulbIcon size="12rem" on={device.status.isOn} masxize="40vw" />;
@@ -276,23 +407,20 @@ const Device = (props: {
       );
       break;
     case "strip":
-      icon = (
-        <StripIcon size="12rem" on={props.device.status.isOn} masxize="40vw" />
-      );
+      icon = <StripIcon size="12rem" on={device.status.isOn} masxize="40vw" />;
       break;
   }
   if (device.status.isConnected) {
     connectStatus = "Connected";
-    connectStatusColor = "#a3e635";
+    connectStatusColor = "#b3fd3d";
   } else if (device.status.isConnecting) {
-    connectStatus = "Connecting";
-    connectStatusColor = "#999999";
+    connectStatus = "Connecting...";
+    connectStatusColor = "#f1f1f1";
   } else if (
     device.status.isConnected === false &&
     device.status.isConnecting === false
   ) {
     connectStatus = "Device is Offline";
-    connectStatusColor = "#e90202";
   }
 
   return (
@@ -321,14 +449,10 @@ const Device = (props: {
         }}
         $backgroundColor={`rgba(${device.status.color.red}, ${
           device.status.color.green
-        }, ${device.status.color.blue}, ${device.status.isOn ? 0.45 : 0.2})`}
-        // onClick={() => {
-        //   props.setWhichDeviceSelected(props.device.id);
-        //   props.setShowModal(true);
-        // }}
+        }, ${device.status.color.blue}, ${device.status.isOn ? 0.65 : 0.2})`}
       >
         <TypeAndSwitch>
-          <DeviceType isOn={device.status.isOn}>
+          <DeviceType $isOn={device.status.isOn}>
             {device.type[0].toUpperCase() + device.type.slice(1)}
           </DeviceType>
           <OnOffSwitch
@@ -350,8 +474,6 @@ const Device = (props: {
 };
 
 export default function Devices() {
-  // const [showModal, setShowModal] = useState<boolean>(false);
-  // const [whichDeviceSelected, setWhichDeviceSelected] = useState<string>("");
   const [initDevicesStatus, setInitDevicesStatus] = useState<IDevice[]>([
     {
       id: v4(),

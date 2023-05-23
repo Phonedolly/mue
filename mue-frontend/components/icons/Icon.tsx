@@ -5,7 +5,7 @@ const IconWithoutLogic = styled.span<{
   size: string;
   masxize?: string;
   backgroundimage: string;
-  $on: boolean | undefined;
+  $on?: boolean;
 }>`
   height: ${(props) => props.size};
   width: ${(props) => props.size};
@@ -15,8 +15,16 @@ const IconWithoutLogic = styled.span<{
   background-repeat: no-repeat;
   /* margin: 0.17rem; */
   background-image: ${(props) => props.backgroundimage};
-  filter: ${(props) =>
-    props?.$on ? `drop-shadow(3px 5px 30px rgb(255, 255, 133, 0.9))` : "none"};
+  filter: ${(props) => {
+    if (props?.$on === undefined) {
+      return "none";
+    } else if (props.$on === false) {
+      return "brightness(0.7)";
+    } else if (props.$on === true) {
+      return "brightness(1.0) drop-shadow(3px 5px 30px rgb(255, 255, 133, 0.9))";
+    }
+  }};
+  transition: filter 0.3s ease-in-out;
 `;
 
 const Icon = (props: {
@@ -24,7 +32,7 @@ const Icon = (props: {
   masxize?: string;
   backgroundimage: string;
   on: boolean | undefined;
-  as: WebTarget | undefined;
+  as?: WebTarget;
 }) => {
   const sizes = {
     small: "0.7em",

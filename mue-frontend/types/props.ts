@@ -12,7 +12,7 @@ export interface ButtonProps {
   disabled?: boolean;
   isLink?: boolean;
   href?: string;
-  backgroundColor?: string;
+  $backgroundColor?: string;
 }
 
 export interface TitleBarButtonProps {

@@ -67,7 +67,7 @@ const Button: FC<ButtonProps> = (props) => {
       {...props}
       size={buttonSize}
       fontWeight={fontWeight}
-      $backgroundColor={props?.backgroundColor}
+      $backgroundColor={props?.$backgroundColor}
     >
       {props.icon !== undefined ? props.icon : null}
       {props?.children || null}
