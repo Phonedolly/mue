@@ -9,7 +9,7 @@ const Container = styled.div`
   justify-content: center;
   padding: 1rem;
   width: 65rem;
-  max-width: 90vw;
+  max-width: 80%;
   margin: 0 auto;
 `;
 

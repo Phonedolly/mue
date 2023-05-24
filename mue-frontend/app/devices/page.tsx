@@ -12,7 +12,12 @@ import { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import { v4 } from "uuid";
 import Wheel from "@uiw/react-color-wheel";
-import { HsvaColor, rgbaToHsva } from "@uiw/color-convert";
+import {
+  HsvaColor,
+  hsvaToRgbString,
+  hsvaToRgbaString,
+  rgbaToHsva,
+} from "@uiw/color-convert";
 
 const DeviceModalBackground = styled(motion.div)`
   position: fixed;
@@ -30,11 +35,13 @@ const DeviceModalBackground = styled(motion.div)`
 const DeviceModalWithoutLogic = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  row-gap: 1.5rem;
+  /* row-gap: 1.5rem; */
   align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  max-height: 95vh;
+  justify-content: space-between;
+  margin: 1rem auto;
+  padding: 1.5rem 0rem 1.5rem 2.2rem;
+  /* height: 22rem; */
+  max-height: 75vh;
   width: 32rem;
   max-width: 80vw;
   border-radius: 25px;
@@ -43,10 +50,26 @@ const DeviceModalWithoutLogic = styled(motion.div)`
   overflow-y: scroll;
   &::-webkit-scrollbar {
     -webkit-appearance: none;
+    width: 2.2rem;
+    color: rgba(0, 0, 0, 0.5);
+  }
+  /* &::-webkit-scrollbar-track {
+    color: transparent;
+    width: 3rem;
+  } */
+  &::-webkit-scrollbar-thumb {
+    /* width: 50%; */
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 25px;
+    overflow: hidden;
+    border: 0.65rem solid transparent;
+    background-clip: padding-box;
   }
 `;
 
 const DeviceModalTitleAndEdit = styled.div`
+  position: relative;
+  left: 1.3rem;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -100,7 +123,7 @@ const BrightnessSliderContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width:100%;
+  width: 100%;
 `;
 
 const BrightnessSlider = (props: {
@@ -131,6 +154,7 @@ const DeviceModalBrightness = styled.h1`
 const DeviceModalColorPickerAndBrightness = (props: {
   initialColor: HsvaColor;
   initialBrightness: number;
+  setCurColor: (curColor: HsvaColor) => void;
 }) => {
   const [hsva, setHsva] = useState(props.initialColor);
   const [brightness, setBrightness] = useState(props.initialBrightness);
@@ -140,7 +164,10 @@ const DeviceModalColorPickerAndBrightness = (props: {
         color={hsva}
         onChange={(color) => {
           setHsva({ ...hsva, ...color.hsva });
+          props.setCurColor({ ...hsva, ...color.hsva });
         }}
+        width={250}
+        height={250}
       />
       <BrightnessSlider value={brightness} setBrightness={setBrightness} />
     </DeviceModalColorPickerAndBrightnessWithoutLogic>
@@ -159,6 +186,7 @@ const DeviceModalInfoTable = styled.table`
 const DeviceModalInfoTableTitle = styled.td`
   color: white;
   font-weight: bold;
+  width: 50%;
 `;
 
 const DeviceModalInfoTableValue = styled.div`
@@ -167,6 +195,7 @@ const DeviceModalInfoTableValue = styled.div`
   column-gap: 0.5em;
   align-items: center;
   justify-content: center;
+  width: 12em;
 `;
 
 const DeviceModalCurrentColor = styled.span<{ color: string }>`
@@ -181,6 +210,15 @@ const DeviceModal = (props: {
   setShowModal: (newVal: boolean) => void;
   icon: JSX.Element;
 }) => {
+  const [curColor, setCurColor] = useState<HsvaColor>(
+    rgbaToHsva({
+      r: props.device.status.color.red,
+      g: props.device.status.color.green,
+      b: props.device.status.color.blue,
+      a: 1,
+    })
+  );
+
   return (
     <DeviceModalWithoutLogic
       initial={{ opacity: 0.5, y: "30vh" }}
@@ -193,13 +231,9 @@ const DeviceModal = (props: {
       </DeviceModalTitleAndEdit>
       {/* {props.icon} */}
       <DeviceModalColorPickerAndBrightness
-        initialColor={rgbaToHsva({
-          r: props.device.status.color.red,
-          g: props.device.status.color.green,
-          b: props.device.status.color.blue,
-          a: 1,
-        })}
+        initialColor={curColor}
         initialBrightness={props.device.status.brightness}
+        setCurColor={setCurColor}
       />
       <DeviceModalInfoTable>
         <tbody>
@@ -218,15 +252,12 @@ const DeviceModal = (props: {
                 : "Disconnected",
             ],
             ["Brightness", `${props.device.status.brightness}%`],
-            [
-              "Color",
-              `rgb(${props.device.status.color.red}, ${props.device.status.color.green}, ${props.device.status.color.blue})`,
-            ],
+            ["Color", `${hsvaToRgbString(curColor).replace("a", "")}`],
             ["IP", props.device.status.ip],
           ].map((item) => (
             <tr key={v4()} style={{ height: "2.7rem" }}>
               <DeviceModalInfoTableTitle>{item[0]}</DeviceModalInfoTableTitle>
-              <td>
+              <td style={{ width: "50%" }}>
                 <DeviceModalInfoTableValue>
                   {item[0] === "Color" ? (
                     <DeviceModalCurrentColor color={item[1]} />
@@ -248,11 +279,14 @@ const DeviceModal = (props: {
 const DevicesContainer = styled.div`
   display: grid;
   justify-items: center;
+  align-items: center;
+  width: 100%;
+  row-gap: 3rem;
+  column-gap: 3rem;
   grid-template-columns: 1fr;
-  @media (min-width: 768px) {
+  @media (min-width: 1280px) {
     grid-template-columns: 1fr 1fr;
   }
-  row-gap: 3rem;
 `;
 
 const DeviceWithoutLogic = styled(motion.div)<{ $backgroundColor?: string }>`
@@ -263,8 +297,8 @@ const DeviceWithoutLogic = styled(motion.div)<{ $backgroundColor?: string }>`
   justify-content: center;
   background-color: ${(props) =>
     props?.$backgroundColor ? props.$backgroundColor : "rgb(50, 50, 50)"};
-  width: 24rem;
-  max-width: 80%;
+  width: 90%;
+  max-width: 22rem;
   cursor: pointer;
   border-radius: 25px;
   padding: 2rem 1rem;
@@ -380,6 +414,13 @@ const Device = (props: {
   const [on, setOn] = useState<boolean>(device.status.isOn);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [scope, animate] = useAnimate();
+  const [scrollInfo, setScrollInfo] = useState<{
+    overflow: string;
+    touchAction: string;
+  }>({
+    overflow: document.body.style.getPropertyValue("overflow"),
+    touchAction: document.body.style.getPropertyValue("touch-action"),
+  });
 
   useEffect(() => {
     function listenEscapeKeyPress(e: KeyboardEvent) {
@@ -389,8 +430,12 @@ const Device = (props: {
     }
     if (showModal === true) {
       document.addEventListener("keydown", listenEscapeKeyPress);
+      // document.body.style.setProperty("overflow", "hidden");
+      // document.body.style.setProperty("overflow", "none");
     } else {
       document.removeEventListener("keydown", listenEscapeKeyPress);
+      // document.body.style.setProperty("overflow", scrollInfo.overflow);
+      // document.body.style.setProperty("touch-action", scrollInfo.touchAction);
     }
   }, [showModal]);
 
@@ -424,7 +469,15 @@ const Device = (props: {
   }
 
   return (
-    <>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
+      }}
+    >
       <AnimatePresence>
         {showModal === true ? (
           <DeviceModalBackground
@@ -469,7 +522,7 @@ const Device = (props: {
           </DeviceStatus>
         </InformationContainer>
       </DeviceWithoutLogic>
-    </>
+    </div>
   );
 };
 

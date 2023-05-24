@@ -5,9 +5,10 @@ const InnerContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  justify-content: center;
+  width: 90%;
   height: 100%;
-  padding: 1rem;
+  /* padding: 1rem; */
 `;
 
 export default InnerContainer;

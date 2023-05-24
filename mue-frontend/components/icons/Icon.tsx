@@ -19,7 +19,7 @@ const IconWithoutLogic = styled.span<{
     if (props?.$on === undefined) {
       return "none";
     } else if (props.$on === false) {
-      return "brightness(0.7)";
+      return "brightness(0.28)";
     } else if (props.$on === true) {
       return "brightness(1.0) drop-shadow(3px 5px 30px rgb(255, 255, 133, 0.9))";
     }
