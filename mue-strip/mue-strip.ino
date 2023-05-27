@@ -4,6 +4,7 @@
 #include <WiFiUdp.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
 
 #include "MueStrip.h"
 
@@ -13,15 +14,18 @@
 #define DATA_PIN 5
 #define PACKET_SIZE 255
 
+/* HTTP Server*/
 ESP8266WebServer server(HTTP_PORT);
 
+/* UDP Socket */
+WiFiUDP Udp;
 char incomingPacket[PACKET_SIZE];
 char replayPacket[] = "Hello World";
 
-WiFiUDP Udp;
-
+/* WiFiClient */
 WiFiClient wifiClient;
 
+/* FastLED*/
 CRGB leds[NUM_LEDS];
 
 struct Color
@@ -33,7 +37,7 @@ struct Color
 
 struct Device
 {
-    char* id;
+    char *id;
     bool isOn;
     bool isConnected;
     int brightness;
@@ -106,6 +110,9 @@ void setLED(int r, int g, int b)
     FastLED.show();
 }
 
+int r = 220;
+int g = 30;
+int b = 220;
 void setup()
 {
     /* Setup Serial */
@@ -141,53 +148,104 @@ void setup()
     for (int i = 0; i < NUM_LEDS; i++)
     {
         leds[i].setRGB(10, 10, 10);
+        Serial.printf("%d LED Setup\n", i);
     }
     FastLED.show();
 }
 
 void loop()
 {
-    /* Connect Backend Server */
-    while (!device.isConnected)
+    for (int j = 0; j < 256; j++)
     {
-        HTTPClient http;
-        http.begin(wifiClient, "http://192.168.219.107:8080/fromThings/connect");
-        http.addHeader("Content-Type", "text/plain");
-
-        int httpCode = http.POST(device.id);
-        String payload = http.getString();
-
-        Serial.println(httpCode);
-        Serial.println(payload);
-
-        http.end();
-
-        if (httpCode == 200)
+        for (int i = 0; i < NUM_LEDS; i++)
         {
-            device.isConnected = true;
-            break;
+            // leds[i] = Scroll((i * 256 / NUM_LEDS + j) % 256);
+            leds[i].setRGB(255, 74, 222);
         }
-        delay(500);
+
+        FastLED.show();
     }
-    int packetSize = Udp.parsePacket();
-    if (packetSize)
+    // for (int i = 0; i < NUM_LEDS; i++)
+    // {
+    //     leds[i]=CRGB::HotPink;
+    //     Serial.printf("%d LED Setup\n", i);
+    // }
+    // FastLED.show();
+
+    // /* Connect Backend Server */
+    // while (!device.isConnected)
+    // {
+    //     HTTPClient http;
+    //     http.begin(wifiClient, "http://192.168.50.195:8080/fromThings/connect");
+    //     http.addHeader("Content-Type", "application/json");
+
+    //     /* Device Property */
+    //     StaticJsonDocument<96> doc;
+
+    //     doc["id"] = ID;
+    //     doc["type"] = "strip";
+
+    //     String output;
+    //     serializeJson(doc, output);
+    //     int httpCode = http.POST(output);
+    //     String payload = http.getString();
+
+    //     Serial.println(httpCode);
+    //     Serial.println(payload);
+
+    //     http.end();
+
+    //     if (httpCode == 200)
+    //     {
+    //         device.isConnected = true;
+    //         break;
+    //     }
+    //     delay(500);
+    // }
+    // int packetSize = Udp.parsePacket();
+    // if (packetSize)
+    // {
+    //     /* receive incoming UDP packets */
+    //     Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+    //     int len = Udp.read(incomingPacket, PACKET_SIZE);
+
+    //     if (len > 0)
+    //     {
+    //         incomingPacket[len] = '\0';
+    //     }
+    //     Serial.printf("UDP packet contents: %s\n", incomingPacket);
+
+    //     /* Send back a reply, to the IP address and port we got the packet from */
+    //     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+    //     Udp.write(replayPacket);
+    //     Udp.endPacket();
+    // }
+
+    // /* handle HTTP API Server */
+    // server.handleClient();
+}
+
+CRGB Scroll(int pos)
+{
+    CRGB color(0, 0, 0);
+    if (pos < 85)
     {
-        /* receive incoming UDP packets */
-        Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-        int len = Udp.read(incomingPacket, PACKET_SIZE);
-
-        if (len > 0)
-        {
-            incomingPacket[len] = '\0';
-        }
-        Serial.printf("UDP packet contents: %s\n", incomingPacket);
-
-        /* Send back a reply, to the IP address and port we got the packet from */
-        Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-        Udp.write(replayPacket);
-        Udp.endPacket();
+        color.g = 70;
+        color.r = ((float)pos / 85.0f) * 255.0f + 100;
+        color.b = 255 - color.r + 100;
     }
-
-    /* handle HTTP API Server */
-    server.handleClient();
+    else if (pos < 170)
+    {
+        color.g = ((float)(pos - 85) / 85.0f) * 255.0f - 200;
+        color.r = 255 - color.g + 100;
+        color.b = 70;
+    }
+    else if (pos < 256)
+    {
+        color.b = ((float)(pos - 170) / 85.0f) * 255.0f;
+        color.g = 255 - color.b - 200;
+        // color.r = 1;
+        color.r = 100;
+    }
+    return color;
 }
