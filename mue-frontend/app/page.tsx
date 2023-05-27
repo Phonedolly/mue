@@ -7,9 +7,6 @@ import styled from "styled-components";
 import Button from "@/components/Button";
 import BulbIcon from "@/components/icons/BulbIcon";
 import SettingsIcon from "@/components/icons/SettingsIcon";
-import { v4 } from "uuid";
-import Link from "next/link";
-import { IDevice } from "@/types/types";
 
 const ButtonContainer = styled.div`
   display: flex;
