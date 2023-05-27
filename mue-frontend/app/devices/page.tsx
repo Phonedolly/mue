@@ -138,7 +138,6 @@ const BrightnessSlider = (props: {
         max="100"
         value={props.value}
         onChange={(e) => props.setBrightness(Number(e.target.value))}
-        defaultValue={props.value}
       />
       <DeviceModalBrightness>{`${props.value}%`}</DeviceModalBrightness>
     </BrightnessSliderContainer>
@@ -269,7 +268,13 @@ const DeviceModal = (props: {
           ))}
         </tbody>
       </DeviceModalInfoTable>
-      <Button size="medium" onClick={() => props.setShowModal(false)}>
+      <Button
+        size="medium"
+        onClick={() => {
+          console.log(`close`);
+          props.setShowModal(false);
+        }}
+      >
         Close
       </Button>
     </DeviceModalWithoutLogic>
@@ -413,14 +418,6 @@ const Device = (props: {
   const [device, setDevice] = useState<IDevice>(props.device);
   const [on, setOn] = useState<boolean>(device.status.isOn);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [scope, animate] = useAnimate();
-  const [scrollInfo, setScrollInfo] = useState<{
-    overflow: string;
-    touchAction: string;
-  }>({
-    overflow: document.body.style.getPropertyValue("overflow"),
-    touchAction: document.body.style.getPropertyValue("touch-action"),
-  });
 
   useEffect(() => {
     function listenEscapeKeyPress(e: KeyboardEvent) {
