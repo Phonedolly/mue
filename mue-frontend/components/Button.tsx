@@ -46,12 +46,12 @@ const Button: FC<ButtonProps> = (props) => {
   }
   if (props?.isLink && props.href !== undefined) {
     return (
-      <Link href={props.href}>
+      <Link href={props.href} passHref style={{ textDecoration: "none" }}>
         <ButtonWithoutLogic
           whileHover={{ scale: 1.07, transition: { duration: 0.15 } }}
           whileTap={{ scale: 1.0 }}
-          {...props}
           size={buttonSize}
+          onClick={props.onClick}
           fontWeight={fontWeight}
         >
           {props.icon !== undefined ? props.icon : null}
@@ -64,8 +64,8 @@ const Button: FC<ButtonProps> = (props) => {
     <ButtonWithoutLogic
       whileHover={{ scale: 1.07, transition: { duration: 0.15 } }}
       whileTap={{ scale: 1.0 }}
-      {...props}
       size={buttonSize}
+      onClick={props.onClick}
       fontWeight={fontWeight}
       $backgroundColor={props?.$backgroundColor}
     >
