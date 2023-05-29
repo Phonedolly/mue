@@ -7,6 +7,13 @@ import { NavBar, NavBarTriggerButton } from "@/components/NavBar";
 import GlobalStyle from "./globalStyle";
 import { useState } from "react";
 import { styled } from "styled-components";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 
 import { Pacifico } from "next/font/google";
 
@@ -15,7 +22,7 @@ const outfit = Outfit({ subsets: ["latin"] });
 
 const Header = styled.header`
   display: flex;
-  width:100%;
+  width: 100%;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
@@ -26,9 +33,11 @@ const HeaderText = styled.h1`
   font-size: 3rem;
   font-weight: 700;
   color: white;
-  filter: drop-shadow(3px 4px 16px rgb(255, 255, 133,  1));
+  filter: drop-shadow(3px 4px 16px rgb(255, 255, 133, 1));
   margin: 0.2rem;
 `;
+
+const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -37,22 +46,24 @@ export default function RootLayout({
 }) {
   const [navOpen, setNavOpen] = useState(false);
   return (
-    <html lang="en" className={outfit.className}>
-      <GlobalStyle />
-      <body>
-        <StyledComponentsRegistry>
-          <Container>
-            <Header>
-              <NavBarTriggerButton onClick={(e) => setNavOpen(!navOpen)} />
-              <HeaderText className={pacifico.className}>Mue</HeaderText>
-            </Header>
+    <QueryClientProvider client={queryClient}>
+      <html lang="en" className={outfit.className}>
+        <GlobalStyle />
+        <body>
+          <StyledComponentsRegistry>
+            <Container>
+              <Header>
+                <NavBarTriggerButton onClick={(e) => setNavOpen(!navOpen)} />
+                <HeaderText className={pacifico.className}>Mue</HeaderText>
+              </Header>
 
-            <NavBar navOpen={navOpen} setNavOpen={setNavOpen} />
-            {children}
-          </Container>
-        </StyledComponentsRegistry>
-      </body>
-    </html>
+              <NavBar navOpen={navOpen} setNavOpen={setNavOpen} />
+              {children}
+            </Container>
+          </StyledComponentsRegistry>
+        </body>
+      </html>
+    </QueryClientProvider>
   );
 }
 

@@ -9,7 +9,6 @@ FastLED-*
 MueStrip.h
 ESP8266WiFi
 ESP8266WebServer
-ESP8266mDNS
 ESP8266HTTPClient
 ArduinoJson
 ArduinoJson-v6.21.2

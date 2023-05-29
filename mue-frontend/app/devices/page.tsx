@@ -53,10 +53,6 @@ const DeviceModalWithoutLogic = styled(motion.div)`
     width: 2.2rem;
     color: rgba(0, 0, 0, 0.5);
   }
-  /* &::-webkit-scrollbar-track {
-    color: transparent;
-    width: 3rem;
-  } */
   &::-webkit-scrollbar-thumb {
     /* width: 50%; */
     background-color: rgba(0, 0, 0, 0.5);
@@ -218,6 +214,19 @@ const DeviceModal = (props: {
     })
   );
 
+  useEffect(() => {
+    document.body.style.cssText = `
+      position: fixed; 
+      top: -${window.scrollY}px;
+      overflow-y: scroll;
+      width: 100%;`;
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.cssText = "";
+      window.scrollTo(0, parseInt(scrollY || "0", 10) * -1);
+    };
+  }, []);
+
   return (
     <DeviceModalWithoutLogic
       initial={{ opacity: 0.5, y: "30vh" }}
@@ -238,6 +247,8 @@ const DeviceModal = (props: {
         <tbody>
           {[
             ["Name", props.device.alias],
+            ["Color", `${hsvaToRgbString(curColor).replace("a", "")}`],
+            ["Brightness", `${props.device.status.brightness}%`],
             [
               "Type",
               props.device.type[0].toUpperCase() + props.device.type.slice(1),
@@ -250,8 +261,6 @@ const DeviceModal = (props: {
                 ? "Connecting"
                 : "Disconnected",
             ],
-            ["Brightness", `${props.device.status.brightness}%`],
-            ["Color", `${hsvaToRgbString(curColor).replace("a", "")}`],
             ["IP", props.device.status.ip],
           ].map((item) => (
             <tr key={v4()} style={{ height: "2.7rem" }}>

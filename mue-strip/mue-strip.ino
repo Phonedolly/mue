@@ -1,3 +1,7 @@
+#if __cplusplus > 199711L
+#define register
+#endif
+
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
@@ -13,6 +17,8 @@
 #define NUM_LEDS 90
 #define DATA_PIN 5
 #define PACKET_SIZE 255
+
+#define NODEMCU_LED_BUILTIN 2
 
 /* HTTP Server*/
 ESP8266WebServer server(HTTP_PORT);
@@ -35,14 +41,22 @@ struct Color
     int blue;
 };
 
+struct DeviceStatus
+{
+    bool is_connected;
+    bool is_connecting;
+    bool is_on;
+    int brightness;
+    Color color;
+    char ip[13];
+};
+
 struct Device
 {
-    char *id;
-    bool isOn;
-    bool isConnected;
-    int brightness;
-    char *type;
-    struct Color color;
+    char *id = ID;
+    char alias[32];
+    char *type = "strip";
+    DeviceStatus status;
 };
 
 /* Setup Device Status */
@@ -53,12 +67,18 @@ struct Color color = {
 };
 struct Device device = {
     .id = ID,
-    .isOn = true,
-    .isConnected = false,
-    .brightness = 50,
-    .type = "strip",
-    .color = color,
-};
+    // alias
+    // type
+    .status = DeviceStatus{
+        .is_connected = false,
+        .is_connecting = true,
+        .is_on = false,
+        .brightness = 10,
+        .color = Color{
+            .red = 10,
+            .green = 10,
+            .blue = 10,
+        }}};
 
 void getHelloWorld()
 {
@@ -88,7 +108,7 @@ void postInit()
         ptr = strtok(NULL, ",");
     }
 
-    setLED(color[0], color[1], color[2]);
+    setLED(color[0], color[1], color[2], 50);
 
     Serial.printf("ID: %s\n", server.arg("id").c_str());
     Serial.printf("Color: %d, %d, %d\n", color[0], color[1], color[2]);
@@ -96,25 +116,72 @@ void postInit()
     server.send(200, "text/plain", "Successfully Initialized");
 }
 
+void postSetDevice()
+{
+    char input[256];
+
+    strcpy(input, server.arg("plain").c_str());
+
+    size_t inputLength;
+    StaticJsonDocument<192> doc;
+    DeserializationError error = deserializeJson(doc, input, inputLength);
+
+    if (error)
+    {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
+
+    // device.id = doc["id"];
+    strncpy(device.alias, doc["alias"], 31);
+    // device.type = doc["type"];
+
+    JsonObject status = doc["status"];
+    device.status.is_connected = status["is_connected"];
+    device.status.is_connecting = status["is_connecting"];
+    device.status.is_on = status["is_on"];
+    device.status.brightness = status["brightness"];
+
+    JsonObject status_color = status["color"];
+    device.status.color.red = status_color["red"];
+    device.status.color.green = status_color["green"];
+    device.status.color.blue = status_color["blue"];
+}
+
 void handleNotFound()
 {
     server.send(404, "text/plain", "404: Not found");
 }
 
-void setLED(int r, int g, int b)
+void setLED(int r, int g, int b, int brightness)
 {
     for (int i = 0; i < NUM_LEDS; i++)
     {
-        leds[i].setRGB(r, g, b);
+        leds[i].setRGB((int)(r * (brightness / 100)), (int)(g * (brightness / 100)), (int)(b * (brightness / 100)));
     }
     FastLED.show();
 }
 
-int r = 220;
-int g = 30;
-int b = 220;
+void blink_builtin_led(int times)
+{
+    for (int i = 0; i < times; i++)
+    {
+        digitalWrite(NODEMCU_LED_BUILTIN, LOW);
+        delay(150);
+        digitalWrite(NODEMCU_LED_BUILTIN, HIGH);
+        delay(150);
+    }
+}
+
 void setup()
 {
+    /* Setup Device Info */
+    strcpy(device.alias, "Mue Strip 1");
+
+    /* Setup Builtin LED */
+    pinMode(NODEMCU_LED_BUILTIN, OUTPUT);
+
     /* Setup Serial */
     Serial.begin(115200);
     Serial.println();
@@ -129,18 +196,23 @@ void setup()
     }
     Serial.println(" connected");
     Serial.printf("IP address: %s\n\n", WiFi.localIP().toString().c_str());
+    blink_builtin_led(4);
 
     /* Setup HTTP API Server */
     server.on("/helloworld", HTTP_GET, getHelloWorld);
     server.on("/init", HTTP_POST, postInit);
+    server.on("/set_device", HTTP_POST, postSetDevice);
     server.onNotFound(handleNotFound);
 
     server.begin();
     Serial.printf("HTTP API Server started\n\n");
+    blink_builtin_led(5);
 
     /* Setup UDP */
     Udp.begin(UDP_PORT);
     Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), UDP_PORT);
+    strcpy(device.status.ip, WiFi.localIP().toString().c_str());
+    blink_builtin_led(6);
 
     /* Setup LED*/
     FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
@@ -148,104 +220,81 @@ void setup()
     for (int i = 0; i < NUM_LEDS; i++)
     {
         leds[i].setRGB(10, 10, 10);
-        Serial.printf("%d LED Setup\n", i);
+        Serial.printf("%dth LED Init\n", i);
     }
     FastLED.show();
+    blink_builtin_led(7);
 }
 
 void loop()
 {
-    for (int j = 0; j < 256; j++)
+    setLED(device.status.color.red, device.status.color.green, device.status.color.blue, device.status.brightness);
+    FastLED.show();
+
+    /* Connect to Backend Server */
+    while (!device.status.is_connected)
     {
-        for (int i = 0; i < NUM_LEDS; i++)
+        HTTPClient http;
+        http.begin(wifiClient, "http://192.168.219.112:8080/from_things/connect");
+        http.addHeader("Content-Type", "application/json");
+
+        /* Device Property */
+        StaticJsonDocument<256> doc;
+
+        doc["id"] = ID;
+        doc["alias"] = device.alias;
+        doc["type"] = device.type;
+
+        JsonObject status = doc.createNestedObject("status");
+        status["is_connected"] = device.status.is_connected;
+        status["is_connecting"] = device.status.is_connecting;
+        status["is_on"] = device.status.is_on;
+        status["brightness"] = device.status.brightness;
+
+        JsonObject status_color = status.createNestedObject("color");
+        status_color["red"] = device.status.color.red;
+        status_color["green"] = device.status.color.green;
+        status_color["blue"] = device.status.color.blue;
+
+        String output;
+        serializeJson(doc, output);
+        int httpCode = http.POST(output);
+        String payload = http.getString();
+
+        Serial.println(httpCode);
+        Serial.println(payload);
+
+        http.end();
+
+        if (httpCode == 200)
         {
-            // leds[i] = Scroll((i * 256 / NUM_LEDS + j) % 256);
-            leds[i].setRGB(255, 74, 222);
+            device.status.is_connected = true;
+            device.status.is_connecting = false;
+            blink_builtin_led(8);
+            break;
         }
-
-        FastLED.show();
+        blink_builtin_led(9);
+        delay(500);
     }
-    // for (int i = 0; i < NUM_LEDS; i++)
-    // {
-    //     leds[i]=CRGB::HotPink;
-    //     Serial.printf("%d LED Setup\n", i);
-    // }
-    // FastLED.show();
-
-    // /* Connect Backend Server */
-    // while (!device.isConnected)
-    // {
-    //     HTTPClient http;
-    //     http.begin(wifiClient, "http://192.168.50.195:8080/fromThings/connect");
-    //     http.addHeader("Content-Type", "application/json");
-
-    //     /* Device Property */
-    //     StaticJsonDocument<96> doc;
-
-    //     doc["id"] = ID;
-    //     doc["type"] = "strip";
-
-    //     String output;
-    //     serializeJson(doc, output);
-    //     int httpCode = http.POST(output);
-    //     String payload = http.getString();
-
-    //     Serial.println(httpCode);
-    //     Serial.println(payload);
-
-    //     http.end();
-
-    //     if (httpCode == 200)
-    //     {
-    //         device.isConnected = true;
-    //         break;
-    //     }
-    //     delay(500);
-    // }
-    // int packetSize = Udp.parsePacket();
-    // if (packetSize)
-    // {
-    //     /* receive incoming UDP packets */
-    //     Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-    //     int len = Udp.read(incomingPacket, PACKET_SIZE);
-
-    //     if (len > 0)
-    //     {
-    //         incomingPacket[len] = '\0';
-    //     }
-    //     Serial.printf("UDP packet contents: %s\n", incomingPacket);
-
-    //     /* Send back a reply, to the IP address and port we got the packet from */
-    //     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    //     Udp.write(replayPacket);
-    //     Udp.endPacket();
-    // }
-
-    // /* handle HTTP API Server */
-    // server.handleClient();
-}
-
-CRGB Scroll(int pos)
-{
-    CRGB color(0, 0, 0);
-    if (pos < 85)
+    int packetSize = Udp.parsePacket();
+    if (packetSize)
     {
-        color.g = 70;
-        color.r = ((float)pos / 85.0f) * 255.0f + 100;
-        color.b = 255 - color.r + 100;
+        /* receive incoming UDP packets */
+        Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+        int len = Udp.read(incomingPacket, PACKET_SIZE);
+
+        if (len > 0)
+        {
+            incomingPacket[len] = '\0';
+        }
+        Serial.printf("UDP packet contents: %s\n", incomingPacket);
+
+        /* Send back a reply, to the IP address and port we got the packet from */
+        Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
+        Udp.write(replayPacket);
+        Udp.endPacket();
     }
-    else if (pos < 170)
-    {
-        color.g = ((float)(pos - 85) / 85.0f) * 255.0f - 200;
-        color.r = 255 - color.g + 100;
-        color.b = 70;
-    }
-    else if (pos < 256)
-    {
-        color.b = ((float)(pos - 170) / 85.0f) * 255.0f;
-        color.g = 255 - color.b - 200;
-        // color.r = 1;
-        color.r = 100;
-    }
-    return color;
+
+    /* handle HTTP API Server */
+    server.handleClient();
 }
